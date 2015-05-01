@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/natefinch/stdplug"
+	"github.com/natefinch/plugin"
 )
 
 func main() {
-	stdplug.Provide("Plugin", plugin{})
+	stdplug.Provide("Plugin", api{})
 }
 
-type plugin struct{}
+type api struct{}
 
-func (plugin) SayHi(name string, response *string) error {
+func (api) SayHi(name string, response *string) error {
 	*response = "Hi " + name
 	return nil
 }
