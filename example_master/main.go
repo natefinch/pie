@@ -9,6 +9,8 @@ import (
 )
 
 func main() {
+	log.SetPrefix("[master log] ")
+
 	path := "example_plugin"
 	if runtime.GOOS == "windows" {
 		path = path + ".exe"
