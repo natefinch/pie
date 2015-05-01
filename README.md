@@ -1,6 +1,6 @@
 # plugin [![GoDoc](https://godoc.org/github.com/natefinch/plugin?status.png)](https://godoc.org/github.com/natefinch/plugin) [![Build Status](https://drone.io/github.com/natefinch/plugin/status.png)](https://drone.io/github.com/natefinch/plugin/latest)
 
-### A framework for go plugins that use RPC over stdin/stdout
+### A toolkit for go plugins using RPC over stdin/stdout
 
 This is a proof of concept, and still needs a lot of TlC.
 
