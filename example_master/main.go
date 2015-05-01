@@ -3,15 +3,13 @@ package main
 import (
 	"log"
 	"net/rpc"
-	"os"
-	"path/filepath"
 	"runtime"
 
 	"github.com/natefinch/stdplug"
 )
 
 func main() {
-	path := filepath.Join(os.Getenv("GOPATH"), "bin", "example_plugin")
+	path := "example_plugin"
 	if runtime.GOOS == "windows" {
 		path = path + ".exe"
 	}
@@ -26,6 +24,13 @@ func main() {
 		log.Fatalf("error calling SayHi: %s", err)
 	}
 	log.Printf("Response from plugin: %q", res)
+
+	res, err = p.SayHi("someone else")
+	if err != nil {
+		log.Fatalf("error calling SayHi: %s", err)
+	}
+	log.Printf("Response from plugin: %q", res)
+
 }
 
 type plugin struct {

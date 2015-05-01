@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-// Provide starts an rpc server providing the given interface over Stdin and Stdout.
-func Provide(rcvr interface{}) {
+// Provide starts an rpc server providing the given interface over Stdin and Stdout.  This call will block forever.
+func Provide(name string, rcvr interface{}) {
 	s := rpc.NewServer()
-	s.Register(rcvr)
+	s.RegisterName(name, rcvr)
 	s.ServeConn(rwCloser{os.Stdin, os.Stdout})
 }
 

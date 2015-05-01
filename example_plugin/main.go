@@ -1,18 +1,16 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/natefinch/stdplug"
 )
 
 func main() {
-	stdplug.Provide(Plugin{})
+	stdplug.Provide("Plugin", plugin{})
 }
 
-type Plugin struct{}
+type plugin struct{}
 
-func (Plugin) SayHi(name string, response *string) error {
-	*response = fmt.Sprintf("Hi %s", name)
+func (plugin) SayHi(name string, response *string) error {
+	*response = "Hi " + name
 	return nil
 }
