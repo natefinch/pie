@@ -1,9 +1,9 @@
-# stdplug
+# plugin
 ### A framework for go plugins that use RPC over stdin/stdout
 
 This is a proof of concept, and still needs a lot of TlC.
 
-stdplug uses go's standard net/rpc to wrap os.Stdin and os.Stdout from a
+plugin uses go's standard net/rpc to wrap os.Stdin and os.Stdout from a
 subprocess, to enable easy RPC with zero configuration.
 
 The plugin is implemented as a regular Go application, which provides a Go type
