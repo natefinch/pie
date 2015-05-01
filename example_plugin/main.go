@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	stdplug.Provide("Plugin", api{})
+	plugin.Provide("Plugin", api{})
 }
 
 type api struct{}
