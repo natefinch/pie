@@ -1,4 +1,4 @@
-package stdplug
+package plugin
 
 import (
 	"errors"
