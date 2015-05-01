@@ -5,7 +5,7 @@ import (
 	"net/rpc"
 	"runtime"
 
-	"github.com/natefinch/stdplug"
+	"github.com/natefinch/plugin"
 )
 
 func main() {
@@ -13,12 +13,12 @@ func main() {
 	if runtime.GOOS == "windows" {
 		path = path + ".exe"
 	}
-	client, err := stdplug.Start(path)
+	client, err := plugin.Start(path)
 	if err != nil {
 		log.Fatalf("Error running plugin: %s", err)
 	}
 	defer client.Close()
-	p := plugin{client}
+	p := plug{client}
 	res, err := p.SayHi("master")
 	if err != nil {
 		log.Fatalf("error calling SayHi: %s", err)
@@ -33,11 +33,11 @@ func main() {
 
 }
 
-type plugin struct {
+type plug struct {
 	client *rpc.Client
 }
 
-func (p plugin) SayHi(name string) (result string, err error) {
+func (p plug) SayHi(name string) (result string, err error) {
 	err = p.client.Call("Plugin.SayHi", name, &result)
 	return result, err
 }
