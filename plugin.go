@@ -1,3 +1,5 @@
+// package plugin provides helper functions for creating plugins using RPC over
+// stdin/stdout.
 package plugin
 
 import (

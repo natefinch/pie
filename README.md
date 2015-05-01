@@ -1,4 +1,5 @@
-# plugin
+# plugin [![GoDoc](https://godoc.org/github.com/natefinch/plugin?status.png)](https://godoc.org/github.com/natefinch/plugin) [![Build Status](https://drone.io/github.com/natefinch/plugin/status.png)](https://drone.io/github.com/natefinch/plugin/latest)
+
 ### A framework for go plugins that use RPC over stdin/stdout
 
 This is a proof of concept, and still needs a lot of TlC.
@@ -19,3 +20,25 @@ them, and it'll work correctly.
 
 The really nice thing about this library is how simple the code is for the
 plugins. It's just a few very simple lines of boilerplate.
+
+# Godoc
+
+## func Provide
+``` go
+func Provide(name string, rcvr interface{})
+```
+
+Provide starts an rpc server providing the given interface over Stdin and
+Stdout.  This call will block forever.
+
+
+## func Start
+``` go
+func Start(path string) (client *rpc.Client, err error)
+```
+
+Start starts a plugin application at the given path and returns an RPC client
+that talks to it over Stdin and Stdout.
+
+
+
