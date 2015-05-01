@@ -19,16 +19,27 @@ func Provide(name string, rcvr interface{}) {
 
 // Start starts a plugin application at the given path and returns an RPC client
 // that talks to it over Stdin and Stdout.
-func Start(path string) (*rpc.Client, error) {
+func Start(path string) (client *rpc.Client, err error) {
 	cmd := exec.Command(path)
 	in, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		if err != nil {
+			in.Close()
+		}
+	}()
 	out, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		if err != nil {
+			out.Close()
+		}
+	}()
+
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
 		return nil, err
