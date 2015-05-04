@@ -26,6 +26,22 @@ process that provides an API that is called by the plugin. To see an example
 of this, look in the example_host and example_driver folders.
 
 
+## func Drive
+``` go
+func Drive() *rpc.Client
+```
+Drive returns an rpc.Client that will drive the host process over Stdin and
+Stdout using gob encoding.
+
+
+## func DriveWithCodec
+``` go
+func DriveWithCodec(newClientCodec func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client
+```
+DriveWithCodec returs an rpc.Client that will drive the host process over
+Stdin and Stdout using the encoding returned by newClientCodec.
+
+
 ## func Start
 ``` go
 func Start(path string, w io.Writer) (*rpc.Client, error)
@@ -96,7 +112,7 @@ effect, the plugin is "driving" this application.
 ``` go
 func (s Server) Register(rcvr interface{}) error
 ```
-Register functions hust like net/rpc.Server's Register.
+Register functions just like net/rpc.Server's Register.
 
 
 ### func (Server) RegisterName

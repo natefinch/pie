@@ -48,12 +48,12 @@ func (s Server) Serve() {
 	s.server.ServeConn(s.rwc)
 }
 
-// RegisterName functions just like net/rpc.Server's RegisterName.
+// RegisterName functions just like net/rpc.Server.RegisterName().
 func (s Server) RegisterName(name string, rcvr interface{}) error {
 	return s.server.RegisterName(name, rcvr)
 }
 
-// Register functions hust like net/rpc.Server's Register.
+// Register functions just like net/rpc.Server.Register().
 func (s Server) Register(rcvr interface{}) error {
 	return s.server.Register(rcvr)
 }
