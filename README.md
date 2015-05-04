@@ -20,8 +20,10 @@ process, to see how the library can be used.  example_master expects
 example_plugin to be in the same directory.  You can just go install both of
 them, and it'll work correctly.
 
-The really nice thing about this library is how simple the code is for the
-plugins. It's just a few very simple lines of boilerplate.
+In addition to a regular plugin that provides an API, this package can be
+used for plugins that drive the main process.  In this case, it is the master
+process that provides an API that is called by the plugin. To see an example
+of this, look in the example_host and example_driver folders.
 
 
 ## func Start
@@ -71,6 +73,23 @@ func NewServerWithCodec(newServerCodec func(io.ReadWriteCloser) rpc.ServerCodec)
 ```
 NewServerWithCodec returns an RPC plugin server that will serve RPC over Stdin and
 Stdout using the codec returned from newServerCodec
+
+
+### func StartDriver
+``` go
+func StartDriver(path string, w io.Writer) (Server, error)
+```
+StartDriver starts a plugin application that consumes an API this application
+provides.  In effect, the plugin is "driving" this application.
+
+
+### func StartDriverWithCodec
+``` go
+func StartDriverWithCodec(newServerCodec func(io.ReadWriteCloser) rpc.ServerCodec, path string, w io.Writer) (Server, error)
+```
+StartDriverWithCodec starts a plugin application that consumes an API this
+application provides using RPC with the codec returned by newServerCodec.  In
+effect, the plugin is "driving" this application.
 
 
 ### func (Server) Register
