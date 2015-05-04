@@ -12,16 +12,122 @@ import (
 	"time"
 )
 
-// Provide starts an rpc server providing the given interface over Stdin and Stdout.  This call will block forever.
-func Provide(name string, rcvr interface{}) {
-	s := rpc.NewServer()
-	s.RegisterName(name, rcvr)
-	s.ServeConn(rwCloser{os.Stdin, os.Stdout})
+// NewServer returns an RPC plugin server that will serve RPC over Stdin and Stdout
+// using gob encoding.
+func NewServer() Server {
+	return Server{
+		server: rpc.NewServer(),
+		rwc:    rwCloser{os.Stdin, os.Stdout},
+	}
+}
+
+// NewServerWithCodec returns an RPC plugin server that will serve RPC over Stdin and
+// Stdout using the codec returned from newServerCodec
+func NewServerWithCodec(newServerCodec func(io.ReadWriteCloser) rpc.ServerCodec) Server {
+	return Server{
+		server: rpc.NewServer(),
+		codec:  newServerCodec,
+		rwc:    rwCloser{os.Stdin, os.Stdout},
+	}
+}
+
+// Server is a value that will allow you to register types for the API of a
+// plugin and then serve those types over RPC using Stdin and Stdout.
+type Server struct {
+	server *rpc.Server
+	codec  func(io.ReadWriteCloser) rpc.ServerCodec
+	rwc    io.ReadWriteCloser
+}
+
+// Serve starts the RPC server, listening on Stdin and writing to Stdout.  This
+// call will block until the client hangs up.
+func (s Server) Serve() {
+	if s.codec != nil {
+		s.server.ServeCodec(s.codec(s.rwc))
+	}
+	s.server.ServeConn(s.rwc)
+}
+
+// RegisterName functions just like net/rpc.Server's RegisterName.
+func (s Server) RegisterName(name string, rcvr interface{}) error {
+	return s.server.RegisterName(name, rcvr)
+}
+
+// Register functions hust like net/rpc.Server's Register.
+func (s Server) Register(rcvr interface{}) error {
+	return s.server.Register(rcvr)
 }
 
 // Start starts a plugin application at the given path and returns an RPC client
-// that talks to it over Stdin and Stdout.
-func Start(path string) (client *rpc.Client, err error) {
+// that communicates using gob encoding.  It writes to the plugin's Stdin and
+// reads from the plugin's Stdout.  The writer passed to w will receive
+// stderr output from the plugin.  Closing the RPC client returned from this
+// function will shut down the plugin's process.
+func Start(path string, w io.Writer) (*rpc.Client, error) {
+	rwc, err := start(path, w)
+	if err != nil {
+		return nil, err
+	}
+	return rpc.NewClient(rwc), nil
+}
+
+// StartWithCodec starts a plugin application at the given path and returns an
+// RPC client that communicates using the ClientCodec returned by
+// newClientCodec.  It writes to the plugin's Stdin and reads from the
+// plugin's Stdout.  The writer passed to w will receive stderr output from the
+// plugin.  Closing the RPC client returned from this function will shut down
+// the plugin's process.
+func StartWithCodec(newClientCodec func(io.ReadWriteCloser) rpc.ClientCodec, path string, w io.Writer) (*rpc.Client, error) {
+	rwc, err := start(path, w)
+	if err != nil {
+		return nil, err
+	}
+	return rpc.NewClientWithCodec(newClientCodec(rwc)), nil
+}
+
+// StartDriver starts a plugin application that consumes an API this application
+// provides.  In effect, the plugin is "driving" this application.
+func StartDriver(path string, w io.Writer) (Server, error) {
+	rwc, err := start(path, w)
+	if err != nil {
+		return Server{}, err
+	}
+	return Server{
+		server: rpc.NewServer(),
+		rwc:    rwc,
+	}, nil
+}
+
+// StartDriverWithCodec starts a plugin application that consumes an API this
+// application provides using RPC with the codec returned by newServerCodec.  In
+// effect, the plugin is "driving" this application.
+func StartDriverWithCodec(newServerCodec func(io.ReadWriteCloser) rpc.ServerCodec, path string, w io.Writer) (Server, error) {
+	rwc, err := start(path, w)
+	if err != nil {
+		return Server{}, err
+	}
+	return Server{
+		server: rpc.NewServer(),
+		codec:  newServerCodec,
+		rwc:    rwc,
+	}, nil
+}
+
+// Drive returns an rpc.Client that will drive the host process over Stdin and
+// Stdout using gob encoding.
+func Drive() *rpc.Client {
+	return rpc.NewClient(rwCloser{os.Stdin, os.Stdout})
+}
+
+// DriveWithCodec returs an rpc.Client that will drive the host process over
+// Stdin and Stdout using the encoding returned by newClientCodec.
+func DriveWithCodec(newClientCodec func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client {
+	return rpc.NewClientWithCodec(newClientCodec(rwCloser{os.Stdin, os.Stdout}))
+}
+
+// start runs the plugin and returns a ReadWriteCloser that can be used to
+// control the plugin.
+func start(path string, w io.Writer) (io.ReadWriteCloser, error) {
 	cmd := exec.Command(path)
 	in, err := cmd.StdinPipe()
 	if err != nil {
@@ -42,20 +148,22 @@ func Start(path string) (client *rpc.Client, err error) {
 		}
 	}()
 
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = w
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-
-	return rpc.NewClient(ioPipe{out, in, cmd.Process}), nil
+	return ioPipe{out, in, cmd.Process}, nil
 }
 
+// ioPipe simply wraps a ReadCloser, WriteCloser, and a Process, and coordinates
+// them so they all close together.
 type ioPipe struct {
 	io.ReadCloser
 	io.WriteCloser
 	proc *os.Process
 }
 
+// Close closes the pipe's WriteCloser, ReadClosers, and process.
 func (iop ioPipe) Close() error {
 	err := iop.ReadCloser.Close()
 	if writeErr := iop.WriteCloser.Close(); writeErr != nil {
@@ -67,6 +175,8 @@ func (iop ioPipe) Close() error {
 	return err
 }
 
+// closeProc sends an interrupt signal to the pipe's process, and if it doesn't
+// respond in one second, kills the process.
 func (iop ioPipe) closeProc() error {
 	result := make(chan error, 1)
 	go func() { _, err := iop.proc.Wait(); result <- err }()
@@ -84,11 +194,14 @@ func (iop ioPipe) closeProc() error {
 	}
 }
 
+// rwCloser just merges a ReadCloser and a WriteCloser into a ReadWriteCloser.
 type rwCloser struct {
 	io.ReadCloser
 	io.WriteCloser
 }
 
+// Close closes both the ReadCloser and the WriteCloser, returning the last
+// error from either.
 func (rw rwCloser) Close() error {
 	err := rw.ReadCloser.Close()
 	if err := rw.WriteCloser.Close(); err != nil {

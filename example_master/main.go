@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/rpc"
+	"os"
 	"runtime"
 
 	"github.com/natefinch/plugin"
@@ -15,7 +16,7 @@ func main() {
 	if runtime.GOOS == "windows" {
 		path = path + ".exe"
 	}
-	client, err := plugin.Start(path)
+	client, err := plugin.Start(path, os.Stderr)
 	if err != nil {
 		log.Fatalf("Error running plugin: %s", err)
 	}
@@ -27,11 +28,11 @@ func main() {
 	}
 	log.Printf("Response from plugin: %q", res)
 
-	res, err = p.SayHi("someone else")
+	res, err = p.SayBye("master")
 	if err != nil {
-		log.Fatalf("error calling SayHi: %s", err)
+		log.Fatalf("error calling SayBye: %s", err)
 	}
-	log.Printf("Response from plugin: %q", res)
+	log.Printf("Response from plugin2: %q", res)
 
 }
 
@@ -41,5 +42,10 @@ type plug struct {
 
 func (p plug) SayHi(name string) (result string, err error) {
 	err = p.client.Call("Plugin.SayHi", name, &result)
+	return result, err
+}
+
+func (p plug) SayBye(name string) (result string, err error) {
+	err = p.client.Call("Plugin2.SayBye", name, &result)
 	return result, err
 }
