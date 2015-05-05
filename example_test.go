@@ -29,10 +29,10 @@ func ExampleStartWithCodec() {
 // This function should be called from the plugin program that wants to provide
 // functionality for the master program.
 //
-// ProvideCodec starts an RPC server that reads from stdin and writes to stdout.
-// It provides functions attached to the API value passed in.  This function
-// will block forever, so it is common to simply put this at theend of the
-// plugin's main function.
+// NewServerWithCodec starts an RPC server that reads from stdin and writes to
+// stdout. It provides functions attached to the API value passed in.
+// Server.Serve() will block forever, so it is common to simply put this at the
+// end of the plugin's main function.
 func ExampleNewServerWithCodec() {
 	p := plugin.NewServerWithCodec(jsonrpc.NewServerCodec)
 	if err := p.RegisterName("Foo", API{}); err != nil {
