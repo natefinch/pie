@@ -18,7 +18,7 @@ import (
 // then call methods on the rpc client returned using the standard rpc
 // pattern.
 func ExampleStartWithCodec() {
-	foo, err := plugin.StartWithCodec(jsonrpc.NewClient, "/var/lib/foo", os.Stderr)
+	foo, err := plugin.StartWithCodec(jsonrpc.NewClientCodec, "/var/lib/foo", os.Stderr)
 	if err != nil {
 		log.Fatalf("failed to load foo plugin: %s", err)
 	}
