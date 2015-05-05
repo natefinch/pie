@@ -26,7 +26,7 @@ func ExampleStartWithCodec() {
 	foo.Call("Foo.ToUpper", "something", &reply)
 }
 
-// This function should be caled fom the plugin program that wants to provide
+// This function should be called from the plugin program that wants to provide
 // functionality for the master program.
 //
 // ProvideCodec starts an RPC server that reads from stdin and writes to stdout.

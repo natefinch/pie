@@ -1,4 +1,4 @@
-// package plugin provides a toolkit for creating plugins for Go applications.
+// Package plugin provides a toolkit for creating plugins for Go applications.
 //
 // This is a proof of concept, and still needs a lot of TLC.
 //
