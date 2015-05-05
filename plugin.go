@@ -46,16 +46,18 @@ func (s Server) Serve() {
 	s.server.ServeConn(s.rwc)
 }
 
-// Register publishes in the server the set of methods of the
-// receiver value that satisfy the following conditions:
+// Register publishes in the server the set of methods of the receiver value
+// that satisfy the following conditions:
+//
 //	- exported method
 //	- two arguments, both of exported type
 //	- the second argument is a pointer
 //	- one return value, of type error
-// It returns an error if the receiver is not an exported type or has
-// no suitable methods. It also logs the error using package log.
-// The client accesses each method using a string of the form "Type.Method",
-// where Type is the receiver's concrete type.
+//
+// It returns an error if the receiver is not an exported type or has no
+// suitable methods. It also logs the error using package log. The client
+// accesses each method using a string of the form "Type.Method", where Type is
+// the receiver's concrete type.
 func (s Server) Register(rcvr interface{}) error {
 	return s.server.Register(rcvr)
 }
@@ -66,9 +68,9 @@ func (s Server) RegisterName(name string, rcvr interface{}) error {
 	return s.server.RegisterName(name, rcvr)
 }
 
-// Start starts a plugin application at the given path and returns an RPC client
-// that communicates using gob encoding.  It writes to the plugin's Stdin and
-// reads from the plugin's Stdout.  The writer passed to w will receive
+// Start starts an application (plugin) at the given path and returns an RPC
+// client that communicates using gob encoding.  It writes to the plugin's Stdin
+// and reads from the plugin's Stdout.  The writer passed to w will receive
 // stderr output from the plugin.  Closing the RPC client returned from this
 // function will shut down the plugin's process.
 func Start(path string, w io.Writer) (*rpc.Client, error) {
@@ -79,12 +81,11 @@ func Start(path string, w io.Writer) (*rpc.Client, error) {
 	return rpc.NewClient(rwc), nil
 }
 
-// StartWithCodec starts a plugin application at the given path and returns an
-// RPC client that communicates using the ClientCodec returned by
-// codec.  It writes to the plugin's Stdin and reads from the
-// plugin's Stdout.  The writer passed to w will receive stderr output from the
-// plugin.  Closing the RPC client returned from this function will shut down
-// the plugin's process.
+// StartWithCodec starts an application (plugin) at the given path and returns
+// an RPC client that communicates using the ClientCodec returned by codec.  It
+// writes to the plugin's Stdin and reads from the plugin's Stdout.  The writer
+// passed to w will receive stderr output from the plugin.  Closing the RPC
+// client returned from this function will shut down the plugin's process.
 func StartWithCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec, path string, w io.Writer) (*rpc.Client, error) {
 	rwc, err := start(path, w)
 	if err != nil {
@@ -121,14 +122,14 @@ func StartDriverWithCodec(codec func(io.ReadWriteCloser) rpc.ServerCodec, path s
 	}, nil
 }
 
-// Drive returns an rpc.Client that will drive the host process over Stdin and
-// Stdout using gob encoding.
+// Drive returns an rpc.Client that will drive the host process over this
+// application's Stdin and Stdout using gob encoding.
 func Drive() *rpc.Client {
 	return rpc.NewClient(rwCloser{os.Stdin, os.Stdout})
 }
 
 // DriveWithCodec returs an rpc.Client that will drive the host process over
-// Stdin and Stdout using the ClientCodec returned by codec.
+// this application's Stdin and Stdout using the ClientCodec returned by codec.
 func DriveWithCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client {
 	return rpc.NewClientWithCodec(codec(rwCloser{os.Stdin, os.Stdout}))
 }
