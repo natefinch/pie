@@ -36,10 +36,10 @@ Stdout using gob encoding.
 
 ## func DriveWithCodec
 ``` go
-func DriveWithCodec(newClientCodec func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client
+func DriveWithCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client
 ```
 DriveWithCodec returs an rpc.Client that will drive the host process over
-Stdin and Stdout using the encoding returned by newClientCodec.
+Stdin and Stdout using the encoding returned by codec.
 
 
 ## func Start
@@ -55,11 +55,11 @@ function will shut down the plugin's process.
 
 ## func StartWithCodec
 ``` go
-func StartWithCodec(newClientCodec func(io.ReadWriteCloser) rpc.ClientCodec, path string, w io.Writer) (*rpc.Client, error)
+func StartWithCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec, path string, w io.Writer) (*rpc.Client, error)
 ```
 StartWithCodec starts a plugin application at the given path and returns an
 RPC client that communicates using the ClientCodec returned by
-newClientCodec.  It writes to the plugin's Stdin and reads from the
+codec.  It writes to the plugin's Stdin and reads from the
 plugin's Stdout.  The writer passed to w will receive stderr output from the
 plugin.  Closing the RPC client returned from this function will shut down
 the plugin's process.
@@ -85,10 +85,10 @@ using gob encoding.
 
 ### func NewServerWithCodec
 ``` go
-func NewServerWithCodec(newServerCodec func(io.ReadWriteCloser) rpc.ServerCodec) Server
+func NewServerWithCodec(codec func(io.ReadWriteCloser) rpc.ServerCodec) Server
 ```
 NewServerWithCodec returns an RPC plugin server that will serve RPC over Stdin and
-Stdout using the codec returned from newServerCodec
+Stdout using the codec returned from codec
 
 
 ### func StartDriver
@@ -101,10 +101,10 @@ provides.  In effect, the plugin is "driving" this application.
 
 ### func StartDriverWithCodec
 ``` go
-func StartDriverWithCodec(newServerCodec func(io.ReadWriteCloser) rpc.ServerCodec, path string, w io.Writer) (Server, error)
+func StartDriverWithCodec(codec func(io.ReadWriteCloser) rpc.ServerCodec, path string, w io.Writer) (Server, error)
 ```
 StartDriverWithCodec starts a plugin application that consumes an API this
-application provides using RPC with the codec returned by newServerCodec.  In
+application provides using RPC with the codec returned by codec.  In
 effect, the plugin is "driving" this application.
 
 

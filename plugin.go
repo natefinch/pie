@@ -22,11 +22,11 @@ func NewServer() Server {
 }
 
 // NewServerWithCodec returns an RPC plugin server that will serve RPC over Stdin and
-// Stdout using the codec returned from newServerCodec
-func NewServerWithCodec(newServerCodec func(io.ReadWriteCloser) rpc.ServerCodec) Server {
+// Stdout using the codec returned from codec
+func NewServerWithCodec(codec func(io.ReadWriteCloser) rpc.ServerCodec) Server {
 	return Server{
 		server: rpc.NewServer(),
-		codec:  newServerCodec,
+		codec:  codec,
 		rwc:    rwCloser{os.Stdin, os.Stdout},
 	}
 }
@@ -73,16 +73,16 @@ func Start(path string, w io.Writer) (*rpc.Client, error) {
 
 // StartWithCodec starts a plugin application at the given path and returns an
 // RPC client that communicates using the ClientCodec returned by
-// newClientCodec.  It writes to the plugin's Stdin and reads from the
+// codec.  It writes to the plugin's Stdin and reads from the
 // plugin's Stdout.  The writer passed to w will receive stderr output from the
 // plugin.  Closing the RPC client returned from this function will shut down
 // the plugin's process.
-func StartWithCodec(newClientCodec func(io.ReadWriteCloser) rpc.ClientCodec, path string, w io.Writer) (*rpc.Client, error) {
+func StartWithCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec, path string, w io.Writer) (*rpc.Client, error) {
 	rwc, err := start(path, w)
 	if err != nil {
 		return nil, err
 	}
-	return rpc.NewClientWithCodec(newClientCodec(rwc)), nil
+	return rpc.NewClientWithCodec(codec(rwc)), nil
 }
 
 // StartDriver starts a plugin application that consumes an API this application
@@ -99,16 +99,16 @@ func StartDriver(path string, w io.Writer) (Server, error) {
 }
 
 // StartDriverWithCodec starts a plugin application that consumes an API this
-// application provides using RPC with the codec returned by newServerCodec.  In
+// application provides using RPC with the codec returned by codec.  In
 // effect, the plugin is "driving" this application.
-func StartDriverWithCodec(newServerCodec func(io.ReadWriteCloser) rpc.ServerCodec, path string, w io.Writer) (Server, error) {
+func StartDriverWithCodec(codec func(io.ReadWriteCloser) rpc.ServerCodec, path string, w io.Writer) (Server, error) {
 	rwc, err := start(path, w)
 	if err != nil {
 		return Server{}, err
 	}
 	return Server{
 		server: rpc.NewServer(),
-		codec:  newServerCodec,
+		codec:  codec,
 		rwc:    rwc,
 	}, nil
 }
@@ -120,9 +120,9 @@ func Drive() *rpc.Client {
 }
 
 // DriveWithCodec returs an rpc.Client that will drive the host process over
-// Stdin and Stdout using the encoding returned by newClientCodec.
-func DriveWithCodec(newClientCodec func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client {
-	return rpc.NewClientWithCodec(newClientCodec(rwCloser{os.Stdin, os.Stdout}))
+// Stdin and Stdout using the encoding returned by codec.
+func DriveWithCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client {
+	return rpc.NewClientWithCodec(codec(rwCloser{os.Stdin, os.Stdout}))
 }
 
 // start runs the plugin and returns a ReadWriteCloser that can be used to

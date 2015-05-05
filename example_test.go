@@ -20,8 +20,7 @@ import (
 func ExampleStartWithCodec() {
 	foo, err := plugin.StartWithCodec(jsonrpc.NewClient, "/var/lib/foo", os.Stderr)
 	if err != nil {
-		log.Printf("failed to load foo plugin: %s", err)
-		return
+		log.Fatalf("failed to load foo plugin: %s", err)
 	}
 	var reply string
 	foo.Call("Foo.ToUpper", "something", &reply)
