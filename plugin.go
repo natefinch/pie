@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// NewServer returns an RPC plugin server that will serve RPC over Stdin and Stdout
-// using gob encoding.
+// NewServer returns an RPC server that will serve RPC over this application's
+// Stdin and Stdout using gob encoding.
 func NewServer() Server {
 	return Server{
 		server: rpc.NewServer(),
@@ -19,8 +19,8 @@ func NewServer() Server {
 	}
 }
 
-// NewServerWithCodec returns an RPC plugin server that will serve RPC over Stdin and
-// Stdout using the codec returned from codec
+// NewServerWithCodec returns an RPC server that will serve RPC over this
+// application's Stdin and Stdout using the ServerCodec returned from codec.
 func NewServerWithCodec(codec func(io.ReadWriteCloser) rpc.ServerCodec) Server {
 	return Server{
 		server: rpc.NewServer(),
@@ -29,16 +29,16 @@ func NewServerWithCodec(codec func(io.ReadWriteCloser) rpc.ServerCodec) Server {
 	}
 }
 
-// Server is a value that will allow you to register types for the API of a
-// plugin and then serve those types over RPC using Stdin and Stdout.
+// Server is a type that will allow you to register types for the API of a
+// plugin and then serve those types over RPC.  It encompasses the functionality
+// to talk to a plugin/master process.
 type Server struct {
 	server *rpc.Server
 	codec  func(io.ReadWriteCloser) rpc.ServerCodec
 	rwc    io.ReadWriteCloser
 }
 
-// Serve starts the RPC server, listening on Stdin and writing to Stdout.  This
-// call will block until the client hangs up.
+// Serve starts the RPC server.  This call will block until the client hangs up.
 func (s Server) Serve() {
 	if s.codec != nil {
 		s.server.ServeCodec(s.codec(s.rwc))
@@ -46,14 +46,24 @@ func (s Server) Serve() {
 	s.server.ServeConn(s.rwc)
 }
 
-// RegisterName functions just like net/rpc.Server.RegisterName().
-func (s Server) RegisterName(name string, rcvr interface{}) error {
-	return s.server.RegisterName(name, rcvr)
-}
-
-// Register functions just like net/rpc.Server.Register().
+// Register publishes in the server the set of methods of the
+// receiver value that satisfy the following conditions:
+//	- exported method
+//	- two arguments, both of exported type
+//	- the second argument is a pointer
+//	- one return value, of type error
+// It returns an error if the receiver is not an exported type or has
+// no suitable methods. It also logs the error using package log.
+// The client accesses each method using a string of the form "Type.Method",
+// where Type is the receiver's concrete type.
 func (s Server) Register(rcvr interface{}) error {
 	return s.server.Register(rcvr)
+}
+
+// RegisterName is like Register but uses the provided name for the type
+// instead of the receiver's concrete type.
+func (s Server) RegisterName(name string, rcvr interface{}) error {
+	return s.server.RegisterName(name, rcvr)
 }
 
 // Start starts a plugin application at the given path and returns an RPC client
@@ -97,7 +107,7 @@ func StartDriver(path string, w io.Writer) (Server, error) {
 }
 
 // StartDriverWithCodec starts a plugin application that consumes an API this
-// application provides using RPC with the codec returned by codec.  In
+// application provides using RPC with the ServerCodec returned by codec.  In
 // effect, the plugin is "driving" this application.
 func StartDriverWithCodec(codec func(io.ReadWriteCloser) rpc.ServerCodec, path string, w io.Writer) (Server, error) {
 	rwc, err := start(path, w)
@@ -118,7 +128,7 @@ func Drive() *rpc.Client {
 }
 
 // DriveWithCodec returs an rpc.Client that will drive the host process over
-// Stdin and Stdout using the encoding returned by codec.
+// Stdin and Stdout using the ClientCodec returned by codec.
 func DriveWithCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client {
 	return rpc.NewClientWithCodec(codec(rwCloser{os.Stdin, os.Stdout}))
 }

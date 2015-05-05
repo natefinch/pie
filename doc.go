@@ -1,6 +1,6 @@
 // Package plugin provides a toolkit for creating plugins for Go applications.
 //
-// This is a proof of concept, and still needs a lot of TLC.
+// This is a work in progress.
 //
 // plugin uses go's standard net/rpc to wrap os.Stdin and os.Stdout from a
 // subprocess, to enable easy RPC with zero configuration.
