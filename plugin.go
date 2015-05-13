@@ -70,36 +70,38 @@ func (s Server) RegisterName(name string, rcvr interface{}) error {
 	return s.server.RegisterName(name, rcvr)
 }
 
-// Start starts an application (plugin) at the given path and returns an RPC
-// client that communicates using gob encoding.  It writes to the plugin's Stdin
-// and reads from the plugin's Stdout.  The writer passed to w will receive
-// stderr output from the plugin.  Closing the RPC client returned from this
-// function will shut down the plugin's process.
-func Start(path string, w io.Writer) (*rpc.Client, error) {
-	rwc, err := start(path, w)
+// Start starts an application (plugin) at the given path and args, and returns
+// an RPC client that communicates using gob encoding.  It writes to the
+// plugin's Stdin and reads from the plugin's Stdout.  The writer passed to
+// output will receive stderr output from the plugin.  Closing the RPC client
+// returned from this function will shut down the plugin's process.
+func Start(output io.Writer, path string, args ...string) (*rpc.Client, error) {
+	rwc, err := start(output, path, args)
 	if err != nil {
 		return nil, err
 	}
 	return rpc.NewClient(rwc), nil
 }
 
-// StartWithCodec starts an application (plugin) at the given path and returns
-// an RPC client that communicates using the ClientCodec returned by codec.  It
-// writes to the plugin's Stdin and reads from the plugin's Stdout.  The writer
-// passed to w will receive stderr output from the plugin.  Closing the RPC
-// client returned from this function will shut down the plugin's process.
-func StartWithCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec, path string, w io.Writer) (*rpc.Client, error) {
-	rwc, err := start(path, w)
+// StartWithCodec starts an application (plugin) at the given path with the
+// given args, writing its stderr to output.  It returns an RPC client that
+// communicates using the ClientCodec returned by codec.  It writes to the
+// plugin's Stdin and reads from the plugin's Stdout.  The writer passed to w
+// will receive stderr output from the plugin.  Closing the RPC client returned
+// from this function will shut down the plugin's process.
+func StartWithCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec, output io.Writer, path string, args ...string) (*rpc.Client, error) {
+	rwc, err := start(output, path, args)
 	if err != nil {
 		return nil, err
 	}
 	return rpc.NewClientWithCodec(codec(rwc)), nil
 }
 
-// StartDriver starts a plugin application that consumes an API this application
+// StartDriver starts a plugin application with the given path and args, writing
+// its stderr to output.  The plugin consumes an API this application
 // provides.  In effect, the plugin is "driving" this application.
-func StartDriver(path string, w io.Writer) (Server, error) {
-	rwc, err := start(path, w)
+func StartDriver(output io.Writer, path string, args ...string) (Server, error) {
+	rwc, err := start(output, path, args)
 	if err != nil {
 		return Server{}, err
 	}
@@ -109,11 +111,12 @@ func StartDriver(path string, w io.Writer) (Server, error) {
 	}, nil
 }
 
-// StartDriverWithCodec starts a plugin application that consumes an API this
+// StartDriverWithCodec starts a plugin application at path with the given args,
+// writing its stderr to output.  The application consumes an API this
 // application provides using RPC with the ServerCodec returned by codec.  In
 // effect, the plugin is "driving" this application.
-func StartDriverWithCodec(codec func(io.ReadWriteCloser) rpc.ServerCodec, path string, w io.Writer) (Server, error) {
-	rwc, err := start(path, w)
+func StartDriverWithCodec(codec func(io.ReadWriteCloser) rpc.ServerCodec, output io.Writer, path string, args ...string) (Server, error) {
+	rwc, err := start(output, path, args)
 	if err != nil {
 		return Server{}, err
 	}
@@ -138,8 +141,8 @@ func DriveWithCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client 
 
 // start runs the plugin and returns a ReadWriteCloser that can be used to
 // control the plugin.
-func start(path string, w io.Writer) (io.ReadWriteCloser, error) {
-	cmd := exec.Command(path)
+func start(w io.Writer, path string, args []string) (io.ReadWriteCloser, error) {
+	cmd := exec.Command(path, args...)
 	in, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, err

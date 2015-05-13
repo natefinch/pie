@@ -15,7 +15,7 @@ func main() {
 		path = path + ".exe"
 	}
 
-	s, err := plugin.StartDriver(path, os.Stderr)
+	s, err := plugin.StartDriver(os.Stderr, path)
 	if err != nil {
 		log.Fatalf("failed to start driver: %s", err)
 	}

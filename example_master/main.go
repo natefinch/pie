@@ -16,7 +16,7 @@ func main() {
 	if runtime.GOOS == "windows" {
 		path = path + ".exe"
 	}
-	client, err := plugin.Start(path, os.Stderr)
+	client, err := plugin.Start(os.Stderr, path)
 	if err != nil {
 		log.Fatalf("Error running plugin: %s", err)
 	}
