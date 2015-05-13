@@ -13,12 +13,12 @@ import (
 // This function should be called from the master program that wants to run
 // plugins to extend its functionality.
 //
-// StartWithCodec starts a plugin at path "foo", using the JSON-RPC codec, and
+// StartWithCodec starts a plugin at path "/var/lib/foo", using the JSON-RPC codec, and
 // writing its output to this application's Stderr.  The application can
 // then call methods on the rpc client returned using the standard rpc
 // pattern.
 func ExampleStartWithCodec() {
-	foo, err := plugin.StartWithCodec(jsonrpc.NewClientCodec, "/var/lib/foo", os.Stderr)
+	foo, err := plugin.StartWithCodec(jsonrpc.NewClientCodec, os.Stderr, "/var/lib/foo")
 	if err != nil {
 		log.Fatalf("failed to load foo plugin: %s", err)
 	}
