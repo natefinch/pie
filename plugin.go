@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+var procStopTimeoutErr = errors.New("process killed after timeout waiting for process to stop")
+
 // NewServer returns an RPC server that will serve RPC over this application's
 // Stdin and Stdout using gob encoding.
 func NewServer() Server {
@@ -164,12 +166,20 @@ func start(path string, w io.Writer) (io.ReadWriteCloser, error) {
 	return ioPipe{out, in, cmd.Process}, nil
 }
 
+// osProcess is an interface that is fullfilled by *os.Process and makes our
+// testing a little easier.
+type osProcess interface {
+	Wait() (*os.ProcessState, error)
+	Kill() error
+	Signal(os.Signal) error
+}
+
 // ioPipe simply wraps a ReadCloser, WriteCloser, and a Process, and coordinates
 // them so they all close together.
 type ioPipe struct {
 	io.ReadCloser
 	io.WriteCloser
-	proc *os.Process
+	proc osProcess
 }
 
 // Close closes the pipe's WriteCloser, ReadClosers, and process.
@@ -184,6 +194,10 @@ func (iop ioPipe) Close() error {
 	return err
 }
 
+// procTimeout is the timeout to wait for a process to stop after being
+// signalled.  It is adjustable to keep tests fast.
+var procTimeout = time.Second
+
 // closeProc sends an interrupt signal to the pipe's process, and if it doesn't
 // respond in one second, kills the process.
 func (iop ioPipe) closeProc() error {
@@ -195,11 +209,11 @@ func (iop ioPipe) closeProc() error {
 	select {
 	case err := <-result:
 		return err
-	case <-time.After(time.Second):
+	case <-time.After(procTimeout):
 		if err := iop.proc.Kill(); err != nil {
 			return fmt.Errorf("error killing process after timeout: %s", err)
 		}
-		return errors.New("timed out waiting for process to stop")
+		return procStopTimeoutErr
 	}
 }
 
