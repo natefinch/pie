@@ -70,7 +70,12 @@ function will shut down the plugin application.
 
 ## func StartProviderCodec
 ``` go
-func StartProviderCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec, output io.Writer, path string, args ...string) (*rpc.Client, error)
+func StartProviderCodec(
+	codec func(io.ReadWriteCloser) rpc.ClientCodec, 
+	output io.Writer, 
+	path string, 
+	args ...string,
+) (*rpc.Client, error)
 ```
 StartProviderCodec starts a plugin application at the given path and args,
 and returns an RPC client that communicates with the plugin using the
