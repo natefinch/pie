@@ -13,32 +13,32 @@ import (
 // This function should be called from the master program that wants to run
 // plugins to extend its functionality.
 //
-// StartWithCodec starts a plugin at path "/var/lib/foo", using the JSON-RPC codec, and
-// writing its output to this application's Stderr.  The application can
-// then call methods on the rpc client returned using the standard rpc
+// StartProviderCodec starts a plugin at path "/var/lib/foo", using the JSON-RPC
+// codec, and writing its output to this application's Stderr.  The application
+// can then call methods on the rpc client returned using the standard rpc
 // pattern.
-func ExampleStartWithCodec() {
-	foo, err := plugin.StartWithCodec(jsonrpc.NewClientCodec, os.Stderr, "/var/lib/foo")
+func ExampleStartProviderCodec() {
+	client, err := plugin.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, "/var/lib/foo")
 	if err != nil {
 		log.Fatalf("failed to load foo plugin: %s", err)
 	}
 	var reply string
-	foo.Call("Foo.ToUpper", "something", &reply)
+	client.Call("Foo.ToUpper", "something", &reply)
 }
 
 // This function should be called from the plugin program that wants to provide
 // functionality for the master program.
 //
-// NewServerWithCodec starts an RPC server that reads from stdin and writes to
+// NewProviderCodec starts an RPC server that reads from stdin and writes to
 // stdout. It provides functions attached to the API value passed in.
 // Server.Serve() will block forever, so it is common to simply put this at the
 // end of the plugin's main function.
-func ExampleNewServerWithCodec() {
-	p := plugin.NewServerWithCodec(jsonrpc.NewServerCodec)
+func ExampleProvider_ServeCodec() {
+	p := plugin.NewProvider()
 	if err := p.RegisterName("Foo", API{}); err != nil {
 		log.Fatalf("can't register api: %s", err)
 	}
-	p.Serve()
+	p.ServeCodec(jsonrpc.NewServerCodec)
 }
 
 // API is an example type to show how to serve methods over RPC.
