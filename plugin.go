@@ -97,7 +97,8 @@ func StartProviderCodec(
 
 // StartConsumer starts a plugin application with the given path and args,
 // writing its stderr to output.  The plugin consumes an API this application
-// provides.
+// provides.  The function returns the provider for this host application, which
+// should be used to register APIs for the plugin to consume.
 func StartConsumer(output io.Writer, path string, args ...string) (Provider, error) {
 	rwc, err := start(makeCommand(output, path, args))
 	if err != nil {
@@ -150,6 +151,8 @@ func start(cmd commander, proc osProcess) (_ io.ReadWriteCloser, err error) {
 	return ioPipe{out, in, proc}, nil
 }
 
+// makeCommand is a function that just creates an exec.Cmd and the process in
+// it. It exists to facilitate testing.
 var makeCommand = func(w io.Writer, path string, args []string) (commander, osProcess) {
 	cmd := exec.Command(path, args...)
 	cmd.Stderr = w

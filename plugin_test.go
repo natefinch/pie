@@ -7,6 +7,7 @@ import (
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"os"
+	"os/exec"
 	"reflect"
 	"testing"
 	"time"
@@ -168,11 +169,29 @@ func TestNewProvider(t *testing.T) {
 	}
 }
 
-func TestRoundTrip(t *testing.T) {
+func TestNewConsumer(t *testing.T) {
+	c := NewConsumer()
+	if c == nil {
+		t.Fatal("Unexpected nil pointer from NewConsumer")
+	}
+}
+
+func TestNewConsumerCodec(t *testing.T) {
+	tcc := &testClientCodec{}
+	c := NewConsumerCodec(tcc.NewClientCodec)
+	if c == nil {
+		t.Fatal("Unexpected nil pointer from NewConsumerCodec")
+	}
+	if !tcc.called {
+		t.Fatal("NewClientCodec function never called.")
+	}
+}
+
+func TestServeAndStart(t *testing.T) {
 	testServeAndStart(nil, nil, t)
 }
 
-func TestRoundTripCodec(t *testing.T) {
+func TestServeAndStartCodec(t *testing.T) {
 	testServeAndStart(jsonrpc.NewServerCodec, jsonrpc.NewClientCodec, t)
 }
 
@@ -183,13 +202,13 @@ func testServeAndStart(
 ) {
 	// set up some pipes for reading/writing that we can pretend are
 	// stdin and stdout for a plugin application.
-	stdin_r, stdin_w := io.Pipe()
-	stdout_r, stdout_w := io.Pipe()
+	stdinR, stdinW := io.Pipe()
+	stdoutR, stdoutW := io.Pipe()
 	process := &proc{}
 
 	rwc := rwCloser{
-		ReadCloser:  stdin_r,
-		WriteCloser: stdout_w,
+		ReadCloser:  stdinR,
+		WriteCloser: stdoutW,
 	}
 
 	// now start a plugin provider using these pipes
@@ -213,11 +232,13 @@ func testServeAndStart(
 
 	// now we mock out the makeCommand that'll get called by the host.
 	f := &fakeCmdData{
-		stdout: stdout_r,
-		stdin:  stdin_w,
+		stdout: stdoutR,
+		stdin:  stdinW,
 		p:      process,
 	}
+	old := makeCommand
 	makeCommand = f.makeCommand
+	defer func() { makeCommand = old }()
 
 	output := &bytes.Buffer{}
 	path := "foo"
@@ -272,6 +293,132 @@ func testServeAndStart(
 	case <-time.After(time.Millisecond * 10):
 		t.Fatal("Server failed to stop after close in 10ms")
 	}
+}
+
+func TestConsumer(t *testing.T) {
+	testConsumer(nil, nil, t)
+}
+
+func TestConsumerCodec(t *testing.T) {
+	testConsumer(jsonrpc.NewServerCodec, jsonrpc.NewClientCodec, t)
+}
+
+func testConsumer(
+	servercodec func(io.ReadWriteCloser) rpc.ServerCodec,
+	clientcodec func(io.ReadWriteCloser) rpc.ClientCodec,
+	t *testing.T,
+) {
+	// set up some pipes for reading/writing that we can pretend are
+	// stdin and stdout for a plugin application.
+	stdinR, stdinW := io.Pipe()
+	stdoutR, stdoutW := io.Pipe()
+	process := &proc{}
+
+	// mock out the makeCommand that'll get called by the host.
+	f := &fakeCmdData{
+		stdout: stdoutR,
+		stdin:  stdinW,
+		p:      process,
+	}
+	old := makeCommand
+	makeCommand = f.makeCommand
+	defer func() { makeCommand = old }()
+	output := &bytes.Buffer{}
+
+	path := "foo"
+	args := []string{"bar", "baz"}
+	p, err := StartConsumer(output, "foo", args...)
+	if err != nil {
+		t.Fatalf("Unexpected error from StartConsumer: %#v", err)
+	}
+
+	if f.w != output {
+		t.Error("Output writer not passed to makeCommand")
+	}
+	if f.path != path {
+		t.Error("Path not passed to makeCommand")
+	}
+	if !reflect.DeepEqual(f.args, args) {
+		t.Error("Args not passed to makeCommand")
+	}
+
+	api := api{}
+	p.RegisterName("api", api)
+	api2 := Api2{}
+	p.Register(api2)
+
+	done := make(chan struct{})
+
+	go func() {
+		if servercodec == nil {
+			p.Serve()
+		} else {
+			p.ServeCodec(servercodec)
+		}
+		close(done)
+	}()
+
+	var client *rpc.Client
+	if clientcodec == nil {
+		client = rpc.NewClient(rwCloser{stdinR, stdoutW})
+	} else {
+		client = rpc.NewClientWithCodec(clientcodec(rwCloser{stdinR, stdoutW}))
+	}
+	defer client.Close()
+
+	name := "bob"
+	var response string
+	if err := client.Call("api.SayHi", name, &response); err != nil {
+		t.Fatalf("Unexpected non-nil error from client.Call: %#v", err)
+	}
+	var expected string
+	api.SayHi(name, &expected)
+	if response != expected {
+		t.Fatalf("Wrong Response from api call, expected %q, got %q", expected, response)
+	}
+	if err := client.Call("Api2.SayBye", name, &response); err != nil {
+		t.Fatalf("Unexpected non-nil error from client.Call: %#v", err)
+	}
+	api2.SayBye(name, &expected)
+	if response != expected {
+		t.Fatalf("Wrong Response from api2 call, expected %q, got %q", expected, response)
+	}
+	if err := client.Close(); err != nil {
+		t.Fatalf("Unexpected non-nil error from client.Call: %#v", err)
+	}
+	select {
+	case <-done:
+		// pass
+	case <-time.After(time.Millisecond * 10):
+		t.Fatal("Server failed to stop after close in 10ms")
+	}
+}
+
+func TestMakeCommand(t *testing.T) {
+	b := &bytes.Buffer{}
+	path := "foo"
+	args := []string{"bar", "baz"}
+	c, p := makeCommand(b, path, args)
+	cmd, ok := c.(*exec.Cmd)
+	if !ok {
+		t.Fatalf("Expected commander to be type exec.Cmd, but was %#v", c)
+	}
+	process, ok := p.(*os.Process)
+	if !ok {
+		t.Fatalf("Expected osProcess to be type *os.Process, but was %#v", p)
+	}
+	if cmd.Process != process {
+		t.Fatal("Expected cmd.Process to be same value as osProcess.")
+	}
+}
+
+type testClientCodec struct {
+	called bool
+}
+
+func (t *testClientCodec) NewClientCodec(r io.ReadWriteCloser) rpc.ClientCodec {
+	t.called = true
+	return jsonrpc.NewClientCodec(r)
 }
 
 func fakeServerCodec(conn io.ReadWriteCloser) rpc.ServerCodec {
