@@ -4,7 +4,7 @@
 
 package plugin provides a toolkit for creating plugins for Go applications.
 
-This is a proof of concept, and still needs a lot of TLC.
+This is a work in progress.
 
 Plugins using this toolkit and the applications managing those plugins
 communicate via RPC over the plugin application's Stdin and Stdout.
