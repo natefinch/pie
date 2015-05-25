@@ -1,8 +1,14 @@
+// Command example_master is a simple example of a master application that runs
+// a standard provider plugin.
+//
+// It communicates with the plugin using JSON-RPC. It expects example_plugin to
+// be in the same directory as itself, and will start it when it runs.
 package main
 
 import (
 	"log"
 	"net/rpc"
+	"net/rpc/jsonrpc"
 	"os"
 	"runtime"
 
@@ -16,7 +22,7 @@ func main() {
 	if runtime.GOOS == "windows" {
 		path = path + ".exe"
 	}
-	client, err := plugin.Start(os.Stderr, path)
+	client, err := plugin.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, path)
 	if err != nil {
 		log.Fatalf("Error running plugin: %s", err)
 	}

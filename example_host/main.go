@@ -1,3 +1,8 @@
+// Command example_host is an example of a main application that provides an API
+// for plugins to consume.
+//
+// It expects to have the example_consumer application in the same directory,
+// which it will start and then serve an API to it.
 package main
 
 import (
@@ -15,7 +20,7 @@ func main() {
 		path = path + ".exe"
 	}
 
-	s, err := plugin.StartDriver(os.Stderr, path)
+	s, err := plugin.StartConsumer(os.Stderr, path)
 	if err != nil {
 		log.Fatalf("failed to start driver: %s", err)
 	}

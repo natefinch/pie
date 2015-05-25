@@ -1,7 +1,12 @@
+// Command example_plugin is an example of a very simple plugin.
+//
+// example_plugin provides two APIs that communicate via JSON-RPC.  It is
+// expected to be started by example_master.
 package main
 
 import (
 	"log"
+	"net/rpc/jsonrpc"
 
 	"github.com/natefinch/plugin"
 )
@@ -9,14 +14,14 @@ import (
 func main() {
 	log.SetPrefix("[plugin log] ")
 
-	s := plugin.NewServer()
-	if err := s.RegisterName("Plugin", api{}); err != nil {
+	p := plugin.NewProvider()
+	if err := p.RegisterName("Plugin", api{}); err != nil {
 		log.Fatalf("failed to register Plugin: %s", err)
 	}
-	if err := s.RegisterName("Plugin2", api2{}); err != nil {
+	if err := p.RegisterName("Plugin2", api2{}); err != nil {
 		log.Fatalf("failed to register Plugin2: %s", err)
 	}
-	s.Serve()
+	p.ServeCodec(jsonrpc.NewServerCodec)
 }
 
 type api struct{}

@@ -1,3 +1,6 @@
+// Command example_consumer is a simple example of a consumer-type plugin.
+//
+// It expects to be run by example_host, and should exist in the same folder.
 package main
 
 import (
@@ -10,7 +13,7 @@ import (
 func main() {
 	log.SetPrefix("[plugin log] ")
 
-	p := plug{plugin.Drive()}
+	p := plug{plugin.NewConsumer()}
 	s, err := p.SayHi("plugin")
 	if err != nil {
 		log.Fatalf("failed saying hi: %s", err)
