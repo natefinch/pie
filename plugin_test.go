@@ -129,8 +129,8 @@ func TestIOPipeSlowProc(t *testing.T) {
 	wc := &closeRW{}
 	p := &proc{delay: procTimeout * 2}
 	iop := ioPipe{rc, wc, p}
-	if err := iop.Close(); err != procStopTimeoutErr {
-		t.Errorf("Unexpected error from ioPipe.Close, expected %#v, got: %#v", procStopTimeoutErr, err)
+	if err := iop.Close(); err != errProcStopTimeout {
+		t.Errorf("Unexpected error from ioPipe.Close, expected %#v, got: %#v", errProcStopTimeout, err)
 	}
 	if !rc.closed {
 		t.Error("Close not called on ReadCloser.")
@@ -216,7 +216,7 @@ func testServeAndStart(
 
 	api := api{}
 	p.RegisterName("api", api)
-	api2 := Api2{}
+	api2 := API2{}
 	p.Register(api2)
 
 	done := make(chan struct{})
@@ -277,12 +277,12 @@ func testServeAndStart(
 	if response != expected {
 		t.Fatalf("Wrong Response from api call, expected %q, got %q", expected, response)
 	}
-	if err := client.Call("Api2.SayBye", name, &response); err != nil {
+	if err := client.Call("API2.SayBye", name, &response); err != nil {
 		t.Fatalf("Unexpected non-nil error from client.Call: %#v", err)
 	}
 	api2.SayBye(name, &expected)
 	if response != expected {
-		t.Fatalf("Wrong Response from api2 call, expected %q, got %q", expected, response)
+		t.Fatalf("Wrong Response from API2 call, expected %q, got %q", expected, response)
 	}
 	if err := client.Close(); err != nil {
 		t.Fatalf("Unexpected non-nil error from client.Call: %#v", err)
@@ -344,7 +344,7 @@ func testConsumer(
 
 	api := api{}
 	p.RegisterName("api", api)
-	api2 := Api2{}
+	api2 := API2{}
 	p.Register(api2)
 
 	done := make(chan struct{})
@@ -376,7 +376,7 @@ func testConsumer(
 	if response != expected {
 		t.Fatalf("Wrong Response from api call, expected %q, got %q", expected, response)
 	}
-	if err := client.Call("Api2.SayBye", name, &response); err != nil {
+	if err := client.Call("API2.SayBye", name, &response); err != nil {
 		t.Fatalf("Unexpected non-nil error from client.Call: %#v", err)
 	}
 	api2.SayBye(name, &expected)
@@ -471,9 +471,9 @@ func (api) SayHi(name string, response *string) error {
 	return nil
 }
 
-type Api2 struct{}
+type API2 struct{}
 
-func (Api2) SayBye(name string, response *string) error {
+func (API2) SayBye(name string, response *string) error {
 	*response = "Bye " + name
 	return nil
 }

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var procStopTimeoutErr = errors.New("process killed after timeout waiting for process to stop")
+var errProcStopTimeout = errors.New("process killed after timeout waiting for process to stop")
 
 // NewProvider returns a plugin provider that will serve RPC over this
 // application's Stdin and Stdout.  This method is intended to be run by the
@@ -214,7 +214,7 @@ func (iop ioPipe) closeProc() error {
 		if err := iop.proc.Kill(); err != nil {
 			return fmt.Errorf("error killing process after timeout: %s", err)
 		}
-		return procStopTimeoutErr
+		return errProcStopTimeout
 	}
 }
 
