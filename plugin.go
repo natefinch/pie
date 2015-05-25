@@ -80,12 +80,7 @@ func StartProvider(output io.Writer, path string, args ...string) (*rpc.Client, 
 // ClientCodec returned by codec over the plugin's Stdin and Stdout. The writer
 // passed to output will receive output from the plugin's stderr.  Closing the
 // RPC client returned from this function will shut down the plugin application.
-func StartProviderCodec(
-	codec func(io.ReadWriteCloser) rpc.ClientCodec,
-	output io.Writer,
-	path string,
-	args ...string,
-) (*rpc.Client, error) {
+func StartProviderCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec, output io.Writer, path string, args ...string) (*rpc.Client, error) {
 	rwc, err := start(makeCommand(output, path, args))
 	if err != nil {
 		return nil, err
