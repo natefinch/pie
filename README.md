@@ -50,11 +50,11 @@ process over this application's Stdin and Stdout using gob encoding.
 
 ## func NewConsumerCodec
 ``` go
-func NewConsumerCodec(codec func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client
+func NewConsumerCodec(f func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client
 ```
 NewConsumerCodec returns an rpc.Client that will consume an API from the host
 process over this application's Stdin and Stdout using the ClientCodec
-returned by codec.
+returned by f.
 
 
 ## func StartProvider
@@ -71,7 +71,7 @@ function will shut down the plugin application.
 ## func StartProviderCodec
 ``` go
 func StartProviderCodec(
-	codec func(io.ReadWriteCloser) rpc.ClientCodec, 
+	f func(io.ReadWriteCloser) rpc.ClientCodec, 
 	output io.Writer, 
 	path string, 
 	args ...string,
@@ -79,7 +79,7 @@ func StartProviderCodec(
 ```
 StartProviderCodec starts a plugin application at the given path and args,
 and returns an RPC client that communicates with the plugin using the
-ClientCodec returned by codec over the plugin's Stdin and Stdout. The writer
+ClientCodec returned by f over the plugin's Stdin and Stdout. The writer
 passed to output will receive output from the plugin's stderr.  Closing the
 RPC client returned from this function will shut down the plugin application.
 
@@ -155,6 +155,7 @@ will block until the client hangs up.
 ``` go
 func (p Provider) ServeCodec(f func(io.ReadWriteCloser) rpc.ServerCodec)
 ```
-
+ServeCodec starts the plugin's RPC server, serving via the encoding returned by f.
+This call will block until the client hangs up.
 
 
