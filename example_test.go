@@ -1,4 +1,4 @@
-package plugin_test
+package pie_test
 
 import (
 	"log"
@@ -7,7 +7,7 @@ import (
 
 	"net/rpc/jsonrpc"
 
-	"github.com/natefinch/plugin"
+	"github.com/natefinch/pie"
 )
 
 // This function should be called from the master program that wants to run
@@ -18,7 +18,7 @@ import (
 // Stderr.  The application can then call methods on the rpc client returned
 // using the standard rpc pattern.
 func ExampleStartProviderCodec() {
-	client, err := plugin.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, "/var/lib/foo")
+	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, "/var/lib/foo")
 	if err != nil {
 		log.Fatalf("failed to load foo plugin: %s", err)
 	}
@@ -33,7 +33,7 @@ func ExampleStartProviderCodec() {
 // the master program. Server.ServeCodec() will block forever, so it is common
 // to simply put this at the end of the plugin's main function.
 func ExampleProvider_ServeCodec() {
-	p := plugin.NewProvider()
+	p := pie.NewProvider()
 	if err := p.RegisterName("Foo", API{}); err != nil {
 		log.Fatalf("can't register api: %s", err)
 	}
@@ -46,7 +46,7 @@ func ExampleProvider_ServeCodec() {
 // This example shows the plugin creating a JSON-RPC client talks to the host
 // application.
 func ExampleNewConsumerCodec() {
-	client := plugin.NewConsumerCodec(jsonrpc.NewServerCodec)
+	client := pie.NewConsumerCodec(jsonrpc.NewServerCodec)
 	var reply string
 	client.Call("Foo.ToUpper", "something", &reply)
 }

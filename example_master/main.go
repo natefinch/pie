@@ -12,7 +12,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/natefinch/plugin"
+	"github.com/natefinch/pie"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 	if runtime.GOOS == "windows" {
 		path = path + ".exe"
 	}
-	client, err := plugin.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, path)
+	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, path)
 	if err != nil {
 		log.Fatalf("Error running plugin: %s", err)
 	}

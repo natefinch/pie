@@ -34,4 +34,4 @@
 // In addition to a regular plugin that provides an API, this package can be
 // used for plugins that consume an API provided by the main process.  To see an
 // example of this, look in the example_host and example_consumer folders.
-package plugin
+package pie

@@ -10,7 +10,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/natefinch/plugin"
+	"github.com/natefinch/pie"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 		path = path + ".exe"
 	}
 
-	s, err := plugin.StartConsumer(os.Stderr, path)
+	s, err := pie.StartConsumer(os.Stderr, path)
 	if err != nil {
 		log.Fatalf("failed to start driver: %s", err)
 	}

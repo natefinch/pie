@@ -1,18 +1,25 @@
-# plugin [![GoDoc](https://godoc.org/github.com/natefinch/plugin?status.png)](https://godoc.org/github.com/natefinch/plugin) [![Build Status](https://drone.io/github.com/natefinch/plugin/status.png)](https://drone.io/github.com/natefinch/plugin/latest)
+# pie [![GoDoc](https://godoc.org/github.com/natefinch/pie?status.png)](https://godoc.org/github.com/natefinch/pie) [![Build Status](https://drone.io/github.com/natefinch/pie/status.png)](https://drone.io/github.com/natefinch/pie/latest)
 
-    import "github.com/natefinch/plugin"
+    import "github.com/natefinch/pie"
 
-package plugin provides a toolkit for creating plugins for Go applications.
+package pie provides a toolkit for creating plugins for Go applications.
 
-This is a work in progress.
+**Why is it called pie?**
+
+Because if you pronounce API like "a pie", then all this consuming and serving
+of APIs becomes a lot more palatable.  Also, pies are the ultimate pluggable
+interface - depending on what's inside, you can get dinner, dessert, a snack, or
+even breakfast.  Plus, then I get to say that plugins in Go are as easy as pie.
+
+## About Pie
 
 Plugins using this toolkit and the applications managing those plugins
 communicate via RPC over the plugin application's Stdin and Stdout.
 
-Functions in this package with the prefix New are intended to be used by the
+Functions in this package with the prefix `New` are intended to be used by the
 plugin to set up its end of the communication.  Functions in this package
-with the prefix Start are intended to be used by the main application to set
-up its end of the communication and run a plugin executable.
+with the prefix `Start` are intended to be used by the main application to set
+up its end of the communication and start a plugin executable.
 
 This package provides two conceptually different types of plugins, based on
 which side of the communication is the server and which is the client.
