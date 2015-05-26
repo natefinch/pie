@@ -4,7 +4,7 @@
 
 package pie provides a toolkit for creating plugins for Go applications.
 
-![pie](https://cloud.githubusercontent.com/assets/3185864/7804533/6f2d70b8-0332-11e5-9a53-574aba44ea69.png)
+![pie](https://cloud.githubusercontent.com/assets/3185864/7804562/bc35d256-0332-11e5-8562-fe00ec4d10b2.png)
 
 **Why is it called pie?**
 
