@@ -14,8 +14,8 @@ import (
 func main() {
 	log.SetPrefix("[plugin log] ")
 
+	p := pie.NewProvider()
 	if err := p.RegisterName("Plugin", api{}); err != nil {
-		p := pie.NewProvider()
 		log.Fatalf("failed to register Plugin: %s", err)
 	}
 	if err := p.RegisterName("Plugin2", api2{}); err != nil {
