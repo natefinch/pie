@@ -15,14 +15,14 @@ import (
 
 func main() {
 	log.SetPrefix("[host log] ")
-	path := "example_driver"
+	path := "example_consumer"
 	if runtime.GOOS == "windows" {
 		path = path + ".exe"
 	}
 
 	s, err := pie.StartConsumer(os.Stderr, path)
 	if err != nil {
-		log.Fatalf("failed to start driver: %s", err)
+		log.Fatalf("failed to start consumer: %s", err)
 	}
 	if err := s.RegisterName("Host", api{}); err != nil {
 		log.Fatalf("failed to register Host: %s", err)
