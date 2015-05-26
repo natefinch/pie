@@ -12,34 +12,33 @@ import (
 
 var errProcStopTimeout = errors.New("process killed after timeout waiting for process to stop")
 
-// NewProvider returns a plugin provider that will serve RPC over this
+// NewProvider returns a Server that will serve RPC over this
 // application's Stdin and Stdout.  This method is intended to be run by the
 // plugin application.
-func NewProvider() Provider {
-	return Provider{
+func NewProvider() Server {
+	return Server{
 		server: rpc.NewServer(),
 		rwc:    rwCloser{os.Stdin, os.Stdout},
 	}
 }
 
-// Provider is a type that will allow you to register types for the API of a
-// plugin and then serve those types over RPC.  It encompasses the functionality
-// to talk to a master process.
-type Provider struct {
+// Server is a type that represents an RPC server that serves an API over
+// stdin/stdout.
+type Server struct {
 	server *rpc.Server
 	rwc    io.ReadWriteCloser
 }
 
-// Serve starts the plugin's RPC server, serving via gob encoding.  This call
+// Serve starts the Server's RPC server, serving via gob encoding.  This call
 // will block until the client hangs up.
-func (p Provider) Serve() {
-	p.server.ServeConn(p.rwc)
+func (s Server) Serve() {
+	s.server.ServeConn(s.rwc)
 }
 
-// ServeCodec starts the plugin's RPC server, serving via the encoding returned by f.
-// This call will block until the client hangs up.
-func (p Provider) ServeCodec(f func(io.ReadWriteCloser) rpc.ServerCodec) {
-	p.server.ServeCodec(f(p.rwc))
+// ServeCodec starts the Server's RPC server, serving via the encoding returned
+// by f. This call will block until the client hangs up.
+func (s Server) ServeCodec(f func(io.ReadWriteCloser) rpc.ServerCodec) {
+	s.server.ServeCodec(f(s.rwc))
 }
 
 // Register publishes in the provider the set of methods of the receiver value
@@ -54,21 +53,21 @@ func (p Provider) ServeCodec(f func(io.ReadWriteCloser) rpc.ServerCodec) {
 // suitable methods. It also logs the error using package log. The client
 // accesses each method using a string of the form "Type.Method", where Type is
 // the receiver's concrete type.
-func (p Provider) Register(rcvr interface{}) error {
-	return p.server.Register(rcvr)
+func (s Server) Register(rcvr interface{}) error {
+	return s.server.Register(rcvr)
 }
 
 // RegisterName is like Register but uses the provided name for the type
 // instead of the receiver's concrete type.
-func (p Provider) RegisterName(name string, rcvr interface{}) error {
-	return p.server.RegisterName(name, rcvr)
+func (s Server) RegisterName(name string, rcvr interface{}) error {
+	return s.server.RegisterName(name, rcvr)
 }
 
-// StartProvider start a plugin application at the given path and args, and
-// returns an RPC client that communicates with the plugin using gob encoding
-// over the plugin's Stdin and Stdout.  The writer passed to output will receive
-// output from the plugin's stderr.  Closing the RPC client returned from this
-// function will shut down the plugin application.
+// StartProvider start a provider-style plugin application at the given path and
+// args, and returns an RPC client that communicates with the plugin using gob
+// encoding over the plugin's Stdin and Stdout.  The writer passed to output
+// will receive output from the plugin's stderr.  Closing the RPC client
+// returned from this function will shut down the plugin application.
 func StartProvider(output io.Writer, path string, args ...string) (*rpc.Client, error) {
 	rwc, err := start(makeCommand(output, path, args))
 	if err != nil {
@@ -77,11 +76,12 @@ func StartProvider(output io.Writer, path string, args ...string) (*rpc.Client, 
 	return rpc.NewClient(rwc), nil
 }
 
-// StartProviderCodec starts a plugin application at the given path and args,
-// and returns an RPC client that communicates with the plugin using the
-// ClientCodec returned by f over the plugin's Stdin and Stdout. The writer
-// passed to output will receive output from the plugin's stderr.  Closing the
-// RPC client returned from this function will shut down the plugin application.
+// StartProviderCodec starts a provider-style plugin application at the given
+// path and args, and returns an RPC client that communicates with the plugin
+// using the ClientCodec returned by f over the plugin's Stdin and Stdout. The
+// writer passed to output will receive output from the plugin's stderr.
+// Closing the RPC client returned from this function will shut down the plugin
+// application.
 func StartProviderCodec(
 	f func(io.ReadWriteCloser) rpc.ClientCodec,
 	output io.Writer,
@@ -95,16 +95,16 @@ func StartProviderCodec(
 	return rpc.NewClientWithCodec(f(rwc)), nil
 }
 
-// StartConsumer starts a plugin application with the given path and args,
-// writing its stderr to output.  The plugin consumes an API this application
-// provides.  The function returns the provider for this host application, which
-// should be used to register APIs for the plugin to consume.
-func StartConsumer(output io.Writer, path string, args ...string) (Provider, error) {
+// StartConsumer starts a consumer-style plugin application with the given path
+// and args, writing its stderr to output.  The plugin consumes an API this
+// application provides.  The function returns the Server for this host
+// application, which should be used to register APIs for the plugin to consume.
+func StartConsumer(output io.Writer, path string, args ...string) (Server, error) {
 	rwc, err := start(makeCommand(output, path, args))
 	if err != nil {
-		return Provider{}, err
+		return Server{}, err
 	}
-	return Provider{
+	return Server{
 		server: rpc.NewServer(),
 		rwc:    rwc,
 	}, nil

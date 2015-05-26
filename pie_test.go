@@ -212,20 +212,20 @@ func testServeAndStart(
 	}
 
 	// now start a plugin provider using these pipes
-	p := Provider{server: rpc.NewServer(), rwc: rwc}
+	s := Server{server: rpc.NewServer(), rwc: rwc}
 
 	api := api{}
-	p.RegisterName("api", api)
+	s.RegisterName("api", api)
 	api2 := API2{}
-	p.Register(api2)
+	s.Register(api2)
 
 	done := make(chan struct{})
 
 	go func() {
 		if servercodec == nil {
-			p.Serve()
+			s.Serve()
 		} else {
-			p.ServeCodec(servercodec)
+			s.ServeCodec(servercodec)
 		}
 		close(done)
 	}()
@@ -327,7 +327,7 @@ func testConsumer(
 
 	path := "foo"
 	args := []string{"bar", "baz"}
-	p, err := StartConsumer(output, "foo", args...)
+	server, err := StartConsumer(output, "foo", args...)
 	if err != nil {
 		t.Fatalf("Unexpected error from StartConsumer: %#v", err)
 	}
@@ -343,17 +343,17 @@ func testConsumer(
 	}
 
 	api := api{}
-	p.RegisterName("api", api)
+	server.RegisterName("api", api)
 	api2 := API2{}
-	p.Register(api2)
+	server.Register(api2)
 
 	done := make(chan struct{})
 
 	go func() {
 		if servercodec == nil {
-			p.Serve()
+			server.Serve()
 		} else {
-			p.ServeCodec(servercodec)
+			server.ServeCodec(servercodec)
 		}
 		close(done)
 	}()

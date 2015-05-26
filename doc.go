@@ -24,8 +24,8 @@
 // many languages are capable of producing an executable that can provide a
 // JSON-RPC API for your application to use.
 //
-// Included in this repo is a very simple example of a master process and a plugin
-// process, to see how the library can be used.  example_master expects
+// Included in this repo is a very simple example of a master process and a
+// plugin process, to see how the library can be used.  example_master expects
 // example_plugin to be in the same directory.  You can just go install both of
 // them, and it'll work correctly.
 //
