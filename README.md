@@ -11,7 +11,8 @@ package pie provides a toolkit for creating plugins for Go applications.
 Because if you pronounce API like "a pie", then all this consuming and serving
 of APIs becomes a lot more palatable.  Also, pies are the ultimate pluggable
 interface - depending on what's inside, you can get dinner, dessert, a snack, or
-even breakfast.  Plus, then I get to say that plugins in Go are as easy as pie.
+even breakfast.  Plus, then I get to say that plugins in Go are as easy as...
+well, you know.
 
 ## About Pie
 
