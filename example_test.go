@@ -46,7 +46,7 @@ func ExampleProvider_ServeCodec() {
 // This example shows the plugin creating a JSON-RPC client talks to the host
 // application.
 func ExampleNewConsumerCodec() {
-	client := pie.NewConsumerCodec(jsonrpc.NewServerCodec)
+	client := pie.NewConsumerCodec(jsonrpc.NewClientCodec)
 	var reply string
 	client.Call("Foo.ToUpper", "something", &reply)
 }
