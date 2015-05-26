@@ -71,61 +71,62 @@ returned by f.
 ``` go
 func StartProvider(output io.Writer, path string, args ...string) (*rpc.Client, error)
 ```
-StartProvider start a plugin application at the given path and args, and
-returns an RPC client that communicates with the plugin using gob encoding
-over the plugin's Stdin and Stdout.  The writer passed to output will receive
-output from the plugin's stderr.  Closing the RPC client returned from this
-function will shut down the plugin application.
+StartProvider start a provider-style plugin application at the given path and
+args, and returns an RPC client that communicates with the plugin using gob
+encoding over the plugin's Stdin and Stdout.  The writer passed to output
+will receive output from the plugin's stderr.  Closing the RPC client
+returned from this function will shut down the plugin application.
 
 
 ## func StartProviderCodec
 ``` go
 func StartProviderCodec(
-	f func(io.ReadWriteCloser) rpc.ClientCodec, 
-	output io.Writer, 
-	path string, 
-	args ...string,
+    f func(io.ReadWriteCloser) rpc.ClientCodec,
+    output io.Writer,
+    path string,
+    args ...string,
 ) (*rpc.Client, error)
 ```
-StartProviderCodec starts a plugin application at the given path and args,
-and returns an RPC client that communicates with the plugin using the
-ClientCodec returned by f over the plugin's Stdin and Stdout. The writer
-passed to output will receive output from the plugin's stderr.  Closing the
-RPC client returned from this function will shut down the plugin application.
+StartProviderCodec starts a provider-style plugin application at the given
+path and args, and returns an RPC client that communicates with the plugin
+using the ClientCodec returned by f over the plugin's Stdin and Stdout. The
+writer passed to output will receive output from the plugin's stderr.
+Closing the RPC client returned from this function will shut down the plugin
+application.
 
 
-## type Provider
+## type Server
 ``` go
-type Provider struct {
+type Server struct {
     // contains filtered or unexported fields
 }
 ```
-Provider is a type that will allow you to register types for the API of a
-plugin and then serve those types over RPC.  It encompasses the functionality
-to talk to a master process.
+Server is a type that represents an RPC server that serves an API over
+stdin/stdout.
 
 
 ### func NewProvider
 ``` go
-func NewProvider() Provider
+func NewProvider() Server
 ```
-NewProvider returns a plugin provider that will serve RPC over this
+NewProvider returns a Server that will serve RPC over this
 application's Stdin and Stdout.  This method is intended to be run by the
 plugin application.
 
 
 ### func StartConsumer
 ``` go
-func StartConsumer(output io.Writer, path string, args ...string) (Provider, error)
+func StartConsumer(output io.Writer, path string, args ...string) (Server, error)
 ```
-StartConsumer starts a plugin application with the given path and args,
-writing its stderr to output.  The plugin consumes an API this application
-provides.
+StartConsumer starts a consumer-style plugin application with the given path
+and args, writing its stderr to output.  The plugin consumes an API this
+application provides.  The function returns the Server for this host
+application, which should be used to register APIs for the plugin to consume.
 
 
-### func (Provider) Register
+### func (Server) Register
 ``` go
-func (p Provider) Register(rcvr interface{}) error
+func (s Server) Register(rcvr interface{}) error
 ```
 Register publishes in the provider the set of methods of the receiver value
 that satisfy the following conditions:
@@ -142,30 +143,25 @@ accesses each method using a string of the form "Type.Method", where Type is
 the receiver's concrete type.
 
 
-
-### func (Provider) RegisterName
+### func (Server) RegisterName
 ``` go
-func (p Provider) RegisterName(name string, rcvr interface{}) error
+func (s Server) RegisterName(name string, rcvr interface{}) error
 ```
 RegisterName is like Register but uses the provided name for the type
 instead of the receiver's concrete type.
 
 
-
-### func (Provider) Serve
+### func (Server) Serve
 ``` go
-func (p Provider) Serve()
+func (s Server) Serve()
 ```
-Serve starts the plugin's RPC server, serving via gob encoding.  This call
+Serve starts the Server's RPC server, serving via gob encoding.  This call
 will block until the client hangs up.
 
 
-
-### func (Provider) ServeCodec
+### func (Server) ServeCodec
 ``` go
-func (p Provider) ServeCodec(f func(io.ReadWriteCloser) rpc.ServerCodec)
+func (s Server) ServeCodec(f func(io.ReadWriteCloser) rpc.ServerCodec)
 ```
-ServeCodec starts the plugin's RPC server, serving via the encoding returned by f.
-This call will block until the client hangs up.
-
-
+ServeCodec starts the Server's RPC server, serving via the encoding returned
+by f. This call will block until the client hangs up.
