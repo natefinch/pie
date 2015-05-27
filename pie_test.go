@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"io/ioutil"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -393,14 +395,51 @@ func testConsumer(
 	}
 }
 
-func TestMakeCommand(t *testing.T) {
-	b := &bytes.Buffer{}
-	path := "foo"
-	args := []string{"bar", "baz"}
-	c := makeCommand(b, path, args)
+func TestMakeCommandAndStart(t *testing.T) {
+	path := "echo"
+	args := []string{"something"}
+	c := makeCommand(nil, path, args)
 	_, ok := c.(execCmd)
 	if !ok {
 		t.Fatalf("Expected commander to be type execCmd, but was %#v", c)
+	}
+	pipe, err := start(c)
+	if err != nil {
+		t.Fatalf("Unexpected non-nil error: %#v", err)
+	}
+	defer pipe.Close()
+	if pipe.proc == nil {
+		t.Fatal("Unexpected nil proc in ioPipe")
+	}
+	p, ok := pipe.proc.(*os.Process)
+	if !ok {
+		t.Fatalf("Expected proc to be os.Process but was %#v", pipe.proc)
+	}
+	var out []byte
+	var readerr error
+	readFinished := make(chan struct{})
+	go func() {
+		out, readerr = ioutil.ReadAll(pipe.ReadCloser)
+		close(readFinished)
+	}()
+	go func() {
+		// When the process finishes, the above ioutil.ReadAll will complete as
+		// well.
+		p.Wait()
+	}()
+	select {
+	case <-time.After(time.Millisecond * 100):
+		p.Kill()
+		t.Fatalf("Timed out waiting for process to run")
+	case <-readFinished:
+		if readerr != nil {
+			t.Fatalf("Unexpected error reading from the process' stdout: %#v", readerr)
+		}
+		actual := strings.TrimSpace(string(out))
+		if actual != args[0] {
+			t.Fatalf("Wrong output, expected %q, got %q", args[0], actual)
+		}
+
 	}
 }
 

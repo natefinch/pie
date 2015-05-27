@@ -69,11 +69,11 @@ func (s Server) RegisterName(name string, rcvr interface{}) error {
 // will receive output from the plugin's stderr.  Closing the RPC client
 // returned from this function will shut down the plugin application.
 func StartProvider(output io.Writer, path string, args ...string) (*rpc.Client, error) {
-	rwc, err := start(makeCommand(output, path, args))
+	pipe, err := start(makeCommand(output, path, args))
 	if err != nil {
 		return nil, err
 	}
-	return rpc.NewClient(rwc), nil
+	return rpc.NewClient(pipe), nil
 }
 
 // StartProviderCodec starts a provider-style plugin application at the given
@@ -88,11 +88,11 @@ func StartProviderCodec(
 	path string,
 	args ...string,
 ) (*rpc.Client, error) {
-	rwc, err := start(makeCommand(output, path, args))
+	pipe, err := start(makeCommand(output, path, args))
 	if err != nil {
 		return nil, err
 	}
-	return rpc.NewClientWithCodec(f(rwc)), nil
+	return rpc.NewClientWithCodec(f(pipe)), nil
 }
 
 // StartConsumer starts a consumer-style plugin application with the given path
@@ -100,13 +100,13 @@ func StartProviderCodec(
 // application provides.  The function returns the Server for this host
 // application, which should be used to register APIs for the plugin to consume.
 func StartConsumer(output io.Writer, path string, args ...string) (Server, error) {
-	rwc, err := start(makeCommand(output, path, args))
+	pipe, err := start(makeCommand(output, path, args))
 	if err != nil {
 		return Server{}, err
 	}
 	return Server{
 		server: rpc.NewServer(),
-		rwc:    rwc,
+		rwc:    pipe,
 	}, nil
 }
 
@@ -123,12 +123,12 @@ func NewConsumerCodec(f func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client {
 	return rpc.NewClientWithCodec(f(rwCloser{os.Stdin, os.Stdout}))
 }
 
-// start runs the plugin and returns a ReadWriteCloser that can be used to
-// control the plugin.
-func start(cmd commander) (_ io.ReadWriteCloser, err error) {
+// start runs the plugin and returns an ioPipe that can be used to control the
+// plugin.
+func start(cmd commander) (_ ioPipe, err error) {
 	in, err := cmd.StdinPipe()
 	if err != nil {
-		return nil, err
+		return ioPipe{}, err
 	}
 	defer func() {
 		if err != nil {
@@ -137,7 +137,7 @@ func start(cmd commander) (_ io.ReadWriteCloser, err error) {
 	}()
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return ioPipe{}, err
 	}
 	defer func() {
 		if err != nil {
@@ -147,7 +147,7 @@ func start(cmd commander) (_ io.ReadWriteCloser, err error) {
 
 	proc, err := cmd.Start()
 	if err != nil {
-		return nil, err
+		return ioPipe{}, err
 	}
 	return ioPipe{out, in, proc}, nil
 }
