@@ -204,9 +204,20 @@ var procTimeout = time.Second
 func (iop ioPipe) closeProc() error {
 	result := make(chan error, 1)
 	go func() { _, err := iop.proc.Wait(); result <- err }()
+
+	// If the process handle no longer exists, return nil
+	// because of how tests work this isn't very clean:
+	switch iop.proc.(type) {
+	case *os.Process:
+		if iop.proc.(*os.Process) == nil {
+			return nil
+		}
+	}
+
 	if err := iop.proc.Signal(os.Interrupt); err != nil {
 		return err
 	}
+
 	select {
 	case err := <-result:
 		return err
