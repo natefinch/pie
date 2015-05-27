@@ -7,7 +7,6 @@ import (
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"os"
-	"os/exec"
 	"reflect"
 	"testing"
 	"time"
@@ -398,17 +397,10 @@ func TestMakeCommand(t *testing.T) {
 	b := &bytes.Buffer{}
 	path := "foo"
 	args := []string{"bar", "baz"}
-	c, p := makeCommand(b, path, args)
-	cmd, ok := c.(*exec.Cmd)
+	c := makeCommand(b, path, args)
+	_, ok := c.(execCmd)
 	if !ok {
-		t.Fatalf("Expected commander to be type exec.Cmd, but was %#v", c)
-	}
-	process, ok := p.(*os.Process)
-	if !ok {
-		t.Fatalf("Expected osProcess to be type *os.Process, but was %#v", p)
-	}
-	if cmd.Process != process {
-		t.Fatal("Expected cmd.Process to be same value as osProcess.")
+		t.Fatalf("Expected commander to be type execCmd, but was %#v", c)
 	}
 }
 
@@ -434,11 +426,11 @@ type fakeCmdData struct {
 	args   []string
 }
 
-func (f *fakeCmdData) makeCommand(w io.Writer, path string, args []string) (commander, osProcess) {
+func (f *fakeCmdData) makeCommand(w io.Writer, path string, args []string) commander {
 	f.w = w
 	f.path = path
 	f.args = args
-	return fakeCommand{f.stdin, f.stdout}, f.p
+	return fakeCommand{f.stdin, f.stdout, f.p}
 }
 
 type nopWCloser struct {
@@ -450,10 +442,11 @@ func (nopWCloser) Close() error { return nil }
 type fakeCommand struct {
 	stdin  io.WriteCloser
 	stdout io.ReadCloser
+	p      *proc
 }
 
-func (f fakeCommand) Start() error {
-	return nil
+func (f fakeCommand) Start() (osProcess, error) {
+	return f.p, nil
 }
 
 func (f fakeCommand) StdinPipe() (io.WriteCloser, error) {

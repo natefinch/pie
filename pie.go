@@ -125,7 +125,7 @@ func NewConsumerCodec(f func(io.ReadWriteCloser) rpc.ClientCodec) *rpc.Client {
 
 // start runs the plugin and returns a ReadWriteCloser that can be used to
 // control the plugin.
-func start(cmd commander, proc osProcess) (_ io.ReadWriteCloser, err error) {
+func start(cmd commander) (_ io.ReadWriteCloser, err error) {
 	in, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, err
@@ -145,7 +145,8 @@ func start(cmd commander, proc osProcess) (_ io.ReadWriteCloser, err error) {
 		}
 	}()
 
-	if err := cmd.Start(); err != nil {
+	proc, err := cmd.Start()
+	if err != nil {
 		return nil, err
 	}
 	return ioPipe{out, in, proc}, nil
@@ -153,10 +154,21 @@ func start(cmd commander, proc osProcess) (_ io.ReadWriteCloser, err error) {
 
 // makeCommand is a function that just creates an exec.Cmd and the process in
 // it. It exists to facilitate testing.
-var makeCommand = func(w io.Writer, path string, args []string) (commander, osProcess) {
+var makeCommand = func(w io.Writer, path string, args []string) commander {
 	cmd := exec.Command(path, args...)
 	cmd.Stderr = w
-	return cmd, cmd.Process
+	return execCmd{cmd}
+}
+
+type execCmd struct {
+	*exec.Cmd
+}
+
+func (e execCmd) Start() (osProcess, error) {
+	if err := e.Cmd.Start(); err != nil {
+		return nil, err
+	}
+	return e.Cmd.Process, nil
 }
 
 // commander is an interface that is fulfilled by exec.Cmd and makes our testing
@@ -164,7 +176,9 @@ var makeCommand = func(w io.Writer, path string, args []string) (commander, osPr
 type commander interface {
 	StdinPipe() (io.WriteCloser, error)
 	StdoutPipe() (io.ReadCloser, error)
-	Start() error
+	// Start is like exec.Cmd's start, except it also returns the os.Process if
+	// start succeeds.
+	Start() (osProcess, error)
 }
 
 // osProcess is an interface that is fullfilled by *os.Process and makes our
