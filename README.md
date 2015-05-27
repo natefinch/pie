@@ -14,6 +14,9 @@ interface - depending on what's inside, you can get dinner, dessert, a snack, or
 even breakfast.  Plus, then I get to say that plugins in Go are as easy as...
 well, you know.
 
+If you have to explain it to your boss, just say it's an acronym for Plug In
+Executables. <sub>(but it's not, really)</sub>
+
 ## About Pie
 
 Plugins using this toolkit and the applications managing those plugins
