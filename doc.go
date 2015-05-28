@@ -24,12 +24,14 @@
 // many languages are capable of producing an executable that can provide a
 // JSON-RPC API for your application to use.
 //
-// Included in this repo is a very simple example of a master process and a
-// plugin process, to see how the library can be used.  example_master expects
-// example_plugin to be in the same directory.  You can just go install both of
+// Included in this repo are some simple examples of a master process and a
+// plugin process, to see how the library can be used.  An example of the
+// standard plugin that provides an API the master process consumes is in the
+// exmaples/provider directory.  master_provider expects plugin_provider to be
+// in the same directory or in your $PATH.  You can just go install both of
 // them, and it'll work correctly.
-//
+
 // In addition to a regular plugin that provides an API, this package can be
 // used for plugins that consume an API provided by the main process.  To see an
-// example of this, look in the example_host and example_consumer folders.
+// example of this, look in the examples/consumer folder.
 package pie

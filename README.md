@@ -43,14 +43,16 @@ using this process.  For example, if your main application uses JSON-RPC,
 many languages are capable of producing an executable that can provide a
 JSON-RPC API for your application to use.
 
-Included in this repo are a couple simple examples of plugins.  The basic plugin
-that provides an API for the master process can be seen in the example\_master
-and example\_plugin folders.  example\_master expects example_plugin to be in
-the same directory.  You can just go install both of them, and it'll work
-correctly.
+Included in this repo are some simple examples of a master process and a
+plugin process, to see how the library can be used.  An example of the
+standard plugin that provides an API the master process consumes is in the
+exmaples/provider directory.  master\_provider expects plugin\_provider to be
+in the same directory or in your $PATH.  You can just go install both of
+them, and it'll work correctly.
 
-To see an example of a plugin that consumes an API from the host process, look
-in the example\_host and example\_consumer folders.
+In addition to a regular plugin that provides an API, this package can be
+used for plugins that consume an API provided by the main process.  To see an
+example of this, look in the examples/consumer folder.
 
 
 ## func NewConsumer
