@@ -27,7 +27,7 @@ plugin to set up its end of the communication.  Functions in this package
 with the prefix `Start` are intended to be used by the main application to set
 up its end of the communication and start a plugin executable.
 
-![pie plugins](https://cloud.githubusercontent.com/assets/3185864/7914525/8fbbb6a6-0845-11e5-8caa-cd43a925b82c.png)
+![pie plugins](https://cloud.githubusercontent.com/assets/3185864/7914996/a13fdc9c-0848-11e5-9e25-6da6feb8e512.png)
 
 This package provides two conceptually different types of plugins, based on
 which side of the communication is the server and which is the client.
