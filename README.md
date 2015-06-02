@@ -1,4 +1,4 @@
-# pie [![GoDoc](https://godoc.org/github.com/natefinch/pie?status.png)](https://godoc.org/github.com/natefinch/pie) [![Build Status](https://drone.io/github.com/natefinch/pie/status.png)](https://drone.io/github.com/natefinch/pie/latest)
+# pie [![GoDoc](https://godoc.org/github.com/natefinch/pie?status.svg)](https://godoc.org/github.com/natefinch/pie) [![Build Status](https://drone.io/github.com/natefinch/pie/status.png)](https://drone.io/github.com/natefinch/pie/latest) [![Join the chat at https://gitter.im/natefinch/pie](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/natefinch/pie?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
     import "github.com/natefinch/pie"
 
