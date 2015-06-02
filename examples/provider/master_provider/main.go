@@ -18,10 +18,11 @@ import (
 func main() {
 	log.SetPrefix("[master log] ")
 
-	path := "example_plugin"
+	path := "plugin_provider"
 	if runtime.GOOS == "windows" {
 		path = path + ".exe"
 	}
+
 	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, path)
 	if err != nil {
 		log.Fatalf("Error running plugin: %s", err)

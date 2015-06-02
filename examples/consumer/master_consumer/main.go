@@ -15,7 +15,7 @@ import (
 
 func main() {
 	log.SetPrefix("[host log] ")
-	path := "example_consumer"
+	path := "plugin_consumer"
 	if runtime.GOOS == "windows" {
 		path = path + ".exe"
 	}
