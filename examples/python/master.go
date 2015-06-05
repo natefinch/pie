@@ -12,7 +12,7 @@ import (
 )
 
 var max int = 2000
-var path string = "./pie_python_plugin.py"
+var path string = "./plugin.py"
 
 type plug struct {
 	Client *rpc.Client

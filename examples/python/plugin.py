@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
-#   Description: A sample asynchronous RPC server plugin over STDIO in python that works with natefiinch/pie
+# Description: A sample asynchronous RPC server plugin over STDIO in python that works with natefiinch/pie
+# Usage: 
+#   pip install pyjsonrpc
+#   go run master.go
 
 from __future__ import print_function
 import sys
