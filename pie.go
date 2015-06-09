@@ -30,8 +30,9 @@ type Server struct {
 	codec  rpc.ServerCodec
 }
 
-// Close closes the connection with the client.  Further communication using
-// this Server will fail.
+// Close closes the connection with the client.  If the client is a plugin
+// process, the process will be stopped.  Further communication using this
+// Server will fail.
 func (s Server) Close() error {
 	if s.codec != nil {
 		return s.codec.Close()

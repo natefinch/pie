@@ -131,6 +131,15 @@ application provides.  The function returns the Server for this host
 application, which should be used to register APIs for the plugin to consume.
 
 
+### func (Server) Close
+``` go
+func (s Server) Close() error
+```
+Close closes the connection with the client.  If the client is a plugin
+process, the process will be stopped.  Further communication using this
+Server will fail.
+
+
 ### func (Server) Register
 ``` go
 func (s Server) Register(rcvr interface{}) error
