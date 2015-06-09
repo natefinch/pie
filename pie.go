@@ -27,6 +27,16 @@ func NewProvider() Server {
 type Server struct {
 	server *rpc.Server
 	rwc    io.ReadWriteCloser
+	codec  rpc.ServerCodec
+}
+
+// Close closes the connection with the client.  Further communication using
+// this Server will fail.
+func (s Server) Close() error {
+	if s.codec != nil {
+		return s.codec.Close()
+	}
+	return s.rwc.Close()
 }
 
 // Serve starts the Server's RPC server, serving via gob encoding.  This call
