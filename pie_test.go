@@ -296,15 +296,24 @@ func testServeAndStart(
 	}
 }
 
-func TestConsumer(t *testing.T) {
-	testConsumer(nil, nil, t)
+func TestConsumerClientClose(t *testing.T) {
+	testConsumer(false, nil, nil, t)
 }
 
-func TestConsumerCodec(t *testing.T) {
-	testConsumer(jsonrpc.NewServerCodec, jsonrpc.NewClientCodec, t)
+func TestConsumerServerClose(t *testing.T) {
+	testConsumer(true, nil, nil, t)
+}
+
+func TestConsumerCodecClientCLose(t *testing.T) {
+	testConsumer(false, jsonrpc.NewServerCodec, jsonrpc.NewClientCodec, t)
+}
+
+func TestConsumerCodecServerClose(t *testing.T) {
+	testConsumer(true, jsonrpc.NewServerCodec, jsonrpc.NewClientCodec, t)
 }
 
 func testConsumer(
+	closeServer bool,
 	servercodec func(io.ReadWriteCloser) rpc.ServerCodec,
 	clientcodec func(io.ReadWriteCloser) rpc.ClientCodec,
 	t *testing.T,
@@ -377,6 +386,7 @@ func testConsumer(
 	if response != expected {
 		t.Fatalf("Wrong Response from api call, expected %q, got %q", expected, response)
 	}
+
 	if err := client.Call("API2.SayBye", name, &response); err != nil {
 		t.Fatalf("Unexpected non-nil error from client.Call: %#v", err)
 	}
@@ -384,14 +394,25 @@ func testConsumer(
 	if response != expected {
 		t.Fatalf("Wrong Response from api2 call, expected %q, got %q", expected, response)
 	}
-	if err := client.Close(); err != nil {
-		t.Fatalf("Unexpected non-nil error from client.Call: %#v", err)
+
+	if closeServer {
+		if err := server.Close(); err != nil {
+			t.Fatalf("Unexpected non-nil error from server.Close: %#v", err)
+		}
+	} else {
+		if err := client.Close(); err != nil {
+			t.Fatalf("Unexpected non-nil error from client.Call: %#v", err)
+		}
 	}
 	select {
 	case <-done:
 		// pass
 	case <-time.After(time.Millisecond * 10):
 		t.Fatal("Server failed to stop after close in 10ms")
+	}
+
+	if closeServer && !process.waited {
+		t.Fatal("Server was closed, but process was not stopped")
 	}
 }
 
@@ -518,10 +539,12 @@ type proc struct {
 	signalErr error
 	sig       os.Signal
 	killed    bool
+	waited    bool
 }
 
 // Wait will wait for delay time and then return waitErr.
 func (p *proc) Wait() (*os.ProcessState, error) {
+	p.waited = true
 	<-time.After(p.delay)
 	return nil, p.waitErr
 }
