@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -533,6 +534,7 @@ func (API2) SayBye(name string, response *string) error {
 
 // proc is a helper that fullfills the osProcess interface for testing purposes.
 type proc struct {
+	mu        sync.Mutex
 	delay     time.Duration
 	waitErr   error
 	killErr   error
@@ -544,19 +546,25 @@ type proc struct {
 
 // Wait will wait for delay time and then return waitErr.
 func (p *proc) Wait() (*os.ProcessState, error) {
+	p.mu.Lock()
 	p.waited = true
+	p.mu.Unlock()
 	<-time.After(p.delay)
 	return nil, p.waitErr
 }
 
 // Kill returns killErr.
 func (p *proc) Kill() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.killed = true
 	return p.killErr
 }
 
 // Signal ignores the signal and returns signalErr.
 func (p *proc) Signal(sig os.Signal) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.sig = sig
 	return p.signalErr
 }
