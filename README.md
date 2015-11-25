@@ -48,7 +48,7 @@ JSON-RPC API for your application to use.
 Included in this repo are some simple examples of a master process and a
 plugin process, to see how the library can be used.  An example of the
 standard plugin that provides an API the master process consumes is in the
-exmaples/provider directory.  master\_provider expects plugin\_provider to be
+examples/provider directory.  master\_provider expects plugin\_provider to be
 in the same directory or in your $PATH.  You can just go install both of
 them, and it'll work correctly.
 
