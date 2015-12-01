@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # Description: A sample asynchronous RPC server plugin over STDIO in python that works with natefiinch/pie
-# Usage: 
+# Usage:
 #   pip install pyjsonrpc
 #   go run master.go
 
@@ -60,7 +60,7 @@ def printer(q):
 
 printer_thread = threading.Thread(target=printer, args=[queue])
 def init():
-    """Initialise the printer threadhm and exit signal handler so that we kill log running threads on exit"""
+    """Initialize the printer thread and exit signal handler so that we kill log running threads on exit"""
 
     printer_thread.start()
 
@@ -77,10 +77,10 @@ def main():
     rpc = JsonRpc()
     line = sys.stdin.readline()
 
-    # This is a sybchronous way to poll stdin, but because we 
-    # handle liens in threads it can handle out of order requests
+    # This is a synchronous way to poll stdin, but because we
+    # handle lines in threads it can handle out of order requests
     while line:
-        try: 
+        try:
             this_input = line
             t = threading.Thread(target=worker, args=[line, queue, rpc])
             t.start()
