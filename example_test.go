@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"net/rpc/jsonrpc"
-
-	"github.com/natefinch/pie"
 )
 
 // This function should be called from the master program that wants to run
